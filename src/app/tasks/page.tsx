@@ -8,6 +8,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { Zap, Clock, Users, CheckCircle, Play, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useBalance } from '@/contexts/BalanceContext';
 
 interface Task {
   id: string;
@@ -89,14 +90,51 @@ export default function TasksPage() {
   const { connected } = useWallet();
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [isCompleting, setIsCompleting] = useState<string | null>(null);
+  const { totalBalance, addEarnedBalance, isProcessing, refreshBalance } = useBalance();
 
   const categories = ['All', 'Survey', 'Social', 'Testing', 'Content', 'Community'];
 
-  const handleTaskComplete = (taskId: string) => {
-    setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, completed: true } : task
-    ));
-    toast.success('Task completed! Proof submitted for review.');
+  const handleTaskComplete = async (taskId: string) => {
+    if (isCompleting || isProcessing) return; // Prevent multiple clicks
+    
+    setIsCompleting(taskId);
+    
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      // Show processing state
+      toast.loading(`Processing task completion and sending ${task.reward} SOL from platform wallet...`);
+      
+      // Simulate task review and approval
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Update task status
+      setTasks(tasks.map(t => 
+        t.id === taskId ? { ...t, completed: true } : t
+      ));
+      
+      // Send real SOL using platform wallet
+      const success = await addEarnedBalance(task.reward);
+      
+      if (success) {
+        toast.success(`Task completed! ${task.reward} SOL sent to your wallet from platform!`);
+        
+        // Show transaction details
+        if (totalBalance !== null) {
+          const newBalance = totalBalance + task.reward;
+          toast.info(`Platform Transfer: +${task.reward} SOL | New Balance: ${newBalance.toFixed(4)} SOL`);
+        }
+      } else {
+        toast.error('Failed to send SOL. Please try again.');
+      }
+      
+    } catch {
+      toast.error('Task completion failed. Please try again.');
+    } finally {
+      setIsCompleting(null);
+    }
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -151,6 +189,35 @@ export default function TasksPage() {
             </p>
           </div>
 
+          {/* Balance Display */}
+          <div className="mb-8">
+            <Card className="solana-card border-0 max-w-md mx-auto">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-center space-x-2">
+                  <Wallet className="w-5 h-5 text-purple-600" />
+                  <span className="text-sm text-muted-foreground">Current Balance:</span>
+                  <span className="text-xl font-bold solana-gradient-text">{totalBalance !== null ? totalBalance.toFixed(4) : 'Loading...'} SOL</span>
+                  <Button 
+                    onClick={() => refreshBalance()} 
+                    size="sm" 
+                    variant="outline"
+                    className="ml-2"
+                    disabled={isProcessing}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </Button>
+                </div>
+                {isProcessing && (
+                  <div className="text-center mt-2">
+                    <div className="text-xs text-muted-foreground">Processing transaction...</div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Category Filter */}
           <div className="flex flex-wrap gap-2 justify-center mb-8">
             {categories.map((category) => (
@@ -202,10 +269,20 @@ export default function TasksPage() {
                   ) : (
                     <Button 
                       onClick={() => handleTaskComplete(task.id)}
-                      className="w-full solana-gradient text-white hover:opacity-90"
+                      disabled={isCompleting === task.id || isProcessing}
+                      className="w-full solana-gradient text-white hover:opacity-90 disabled:opacity-50"
                     >
-                      <Play className="w-4 h-4 mr-2" />
-                      {task.proofRequired ? 'Submit Proof' : 'Complete Task'}
+                      {isCompleting === task.id || isProcessing ? (
+                        <>
+                          <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          {isProcessing ? 'Sending from Platform Wallet...' : 'Processing...'}
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4 mr-2" />
+                          {task.proofRequired ? 'Submit Proof' : 'Complete Task'}
+                        </>
+                      )}
                     </Button>
                   )}
                 </CardContent>

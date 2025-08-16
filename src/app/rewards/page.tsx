@@ -9,6 +9,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { Gift, Wallet, Zap, CheckCircle, Star } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useBalance } from '@/contexts/BalanceContext';
 
 interface Reward {
   id: string;
@@ -102,23 +103,52 @@ const mockUserStats: UserStats = {
 
 export default function RewardsPage() {
   const { connected } = useWallet();
-  const [userStats] = useState<UserStats>(mockUserStats);
-  const [rewards] = useState<Reward[]>(mockRewards);
+  const { totalBalance, subtractBalance } = useBalance();
+  const [rewards, setRewards] = useState<Reward[]>(mockRewards);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [isRedeeming, setIsRedeeming] = useState<string | null>(null);
 
   const categories = ['All', 'Streaming', 'Music', 'Productivity', 'Gaming', 'Development'];
 
-  const handleRedeem = (reward: Reward) => {
-    if (userStats.availableBalance < reward.cost) {
-      toast.error('Insufficient balance. Complete more tasks to earn SOL.');
-      return;
+  const handleRedeem = async (rewardId: string) => {
+    if (isRedeeming) return;
+
+    setIsRedeeming(rewardId);
+
+    try {
+      const reward = rewards.find(r => r.id === rewardId);
+      if (!reward) return;
+
+      // Simulate redemption process
+      toast.loading(`Processing ${reward.name} redemption...`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Update reward status
+      setRewards(rewards.map(r =>
+        r.id === rewardId ? { ...r, redeemed: true } : r
+      ));
+
+      // Deduct balance
+      const success = await subtractBalance(reward.cost);
+
+      if (success) {
+        toast.success(`${reward.name} redeemed successfully!`);
+      } else {
+        toast.error('Insufficient balance for redemption.');
+      }
+
+    } catch {
+      toast.error('Redemption failed. Please try again.');
+    } finally {
+      setIsRedeeming(null);
     }
-    toast.success(`${reward.name} redeemed successfully! Check your email for the gift card.`);
   };
 
   const filteredRewards = selectedCategory === 'All' 
     ? rewards 
     : rewards.filter(reward => reward.category === selectedCategory);
+
+  const displayBalance = totalBalance !== null ? totalBalance : mockUserStats.availableBalance;
 
   if (!connected) {
     return (
@@ -167,27 +197,10 @@ export default function RewardsPage() {
                   <Wallet className="w-5 h-5 text-purple-600" />
                   <span className="text-sm text-muted-foreground">Available Balance</span>
                 </div>
-                <div className="text-2xl font-bold solana-gradient-text">{userStats.availableBalance} SOL</div>
-              </CardContent>
-            </Card>
-
-            <Card className="solana-card border-0">
-              <CardContent className="pt-6">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Zap className="w-5 h-5 text-yellow-500" />
-                  <span className="text-sm text-muted-foreground">Total Earned</span>
-                </div>
-                <div className="text-2xl font-bold solana-gradient-text">{userStats.totalEarned} SOL</div>
-              </CardContent>
-            </Card>
-
-            <Card className="solana-card border-0">
-              <CardContent className="pt-6">
-                <div className="flex items-center space-x-2 mb-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-sm text-muted-foreground">Tasks Completed</span>
-                </div>
-                <div className="text-2xl font-bold solana-gradient-text">{userStats.tasksCompleted}</div>
+                <div className="text-2xl font-bold solana-gradient-text">{displayBalance.toFixed(4)} SOL</div>
+                {totalBalance !== null && (
+                  <div className="text-xs text-green-600 mt-1">Real Wallet Balance</div>
+                )}
               </CardContent>
             </Card>
 
@@ -197,7 +210,27 @@ export default function RewardsPage() {
                   <Gift className="w-5 h-5 text-pink-500" />
                   <span className="text-sm text-muted-foreground">Rewards Redeemed</span>
                 </div>
-                <div className="text-2xl font-bold solana-gradient-text">{userStats.rewardsRedeemed}</div>
+                <div className="text-2xl font-bold solana-gradient-text">{mockUserStats.rewardsRedeemed}</div>
+              </CardContent>
+            </Card>
+
+            <Card className="solana-card border-0">
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-2 mb-2">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span className="text-sm text-muted-foreground">Tasks Completed</span>
+                </div>
+                <div className="text-2xl font-bold solana-gradient-text">{mockUserStats.tasksCompleted}</div>
+              </CardContent>
+            </Card>
+
+            <Card className="solana-card border-0">
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Zap className="w-5 h-5 text-yellow-500" />
+                  <span className="text-sm text-muted-foreground">Total Redeemed</span>
+                </div>
+                <div className="text-2xl font-bold solana-gradient-text">{mockUserStats.totalRedeemed.toFixed(2)} SOL</div>
               </CardContent>
             </Card>
           </div>
@@ -208,10 +241,10 @@ export default function RewardsPage() {
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">Progress to Next Reward</span>
                 <span className="text-sm text-muted-foreground">
-                  {userStats.availableBalance.toFixed(2)} / 0.5 SOL
+                  {displayBalance.toFixed(2)} / 0.5 SOL
                 </span>
               </div>
-              <Progress value={(userStats.availableBalance / 0.5) * 100} className="mb-2" />
+              <Progress value={(displayBalance / 0.5) * 100} className="mb-2" />
               <p className="text-xs text-muted-foreground">
                 Complete more tasks to unlock higher-tier rewards
               </p>
@@ -259,12 +292,12 @@ export default function RewardsPage() {
                   </div>
                   
                   <Button 
-                    onClick={() => handleRedeem(reward)}
-                    disabled={!reward.available || userStats.availableBalance < reward.cost}
+                    onClick={() => handleRedeem(reward.id)}
+                    disabled={!reward.available || displayBalance < reward.cost || isRedeeming === reward.id}
                     className="w-full solana-gradient text-white hover:opacity-90 disabled:opacity-50"
                   >
                     <Gift className="w-4 h-4 mr-2" />
-                    {userStats.availableBalance < reward.cost ? 'Insufficient Balance' : 'Redeem Now'}
+                    {isRedeeming === reward.id ? 'Processing...' : displayBalance < reward.cost ? 'Insufficient Balance' : 'Redeem Now'}
                   </Button>
                 </CardContent>
               </Card>

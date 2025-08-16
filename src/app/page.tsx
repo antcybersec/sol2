@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { Wallet, Zap, Gift, Users, TrendingUp, Star } from 'lucide-react';
+import { Wallet, Zap, Gift, Users, TrendingUp, Star, CheckCircle, Settings, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function HomePage() {
   const { connected } = useWallet();
@@ -57,10 +58,44 @@ export default function HomePage() {
               Complete Tasks,
               <span className="solana-gradient-text block">Earn SOL</span>
             </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
               Join the future of task-based rewards. Complete simple tasks, earn SOL, 
               and redeem for your favorite subscription services.
             </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+              ⚠️ Currently running on Solana Devnet for testing. Connect your Devnet wallet to start earning!
+            </p>
+            
+            {/* Devnet Setup Guide */}
+            {!connected && (
+              <div className="mb-8 max-w-2xl mx-auto">
+                <Card className="solana-card border-0">
+                  <CardContent className="pt-6">
+                    <h3 className="text-lg font-semibold mb-4 text-center">How to Get Started:</h3>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold mt-0.5">1</div>
+                        <div>
+                          <strong>Switch to Devnet:</strong> In your Phantom wallet, go to Settings → Developer Settings → Change Network to &quot;Devnet&quot;
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold mt-0.5">2</div>
+                        <div>
+                          <strong>Get Free SOL:</strong> Visit <a href="https://faucet.solana.com" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">Solana Faucet</a> and get free Devnet SOL
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs font-bold mt-0.5">3</div>
+                        <div>
+                          <strong>Connect Wallet:</strong> Click &quot;Connect Wallet&quot; below and start earning!
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {connected ? (
                 <Link href="/tasks">
@@ -142,26 +177,77 @@ export default function HomePage() {
           <Card className="solana-card border-0">
             <CardContent className="pt-12 pb-12">
               <h2 className="text-3xl font-bold mb-4">Ready to Start Earning?</h2>
-              <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Connect your wallet and start completing tasks to earn SOL rewards. 
-                Join thousands of users already earning on our platform.
+              <p className="text-muted-foreground mb-4">
+                Complete tasks and earn SOL rewards on Solana Devnet. Connect your wallet to get started!
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/tasks">
-                  <Button size="lg" className="solana-gradient text-white hover:opacity-90">
-                    <Zap className="w-5 h-5 mr-2" />
-                    Browse Tasks
-                  </Button>
-                </Link>
-                <Link href="/rewards">
-                  <Button variant="outline" size="lg">
-                    <Gift className="w-5 h-5 mr-2" />
-                    View Available Rewards
-                  </Button>
-                </Link>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span>Connect Phantom wallet</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span>Complete tasks and earn SOL</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span>Redeem rewards for gift cards</span>
+                </div>
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Devnet Setup Guide */}
+        {!connected && (
+          <div className="max-w-4xl mx-auto mt-8">
+            <Card className="solana-card border-0">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Settings className="w-5 h-5" />
+                  <span>Devnet Setup Guide</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">1. Switch to Devnet</h4>
+                    <p className="text-sm text-muted-foreground">
+                      In your Phantom wallet, go to Settings → Developer Settings → Change Network → Devnet
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">2. Get Devnet SOL</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Visit the Solana Faucet to get free Devnet SOL for testing
+                    </p>
+                    <Button asChild variant="outline" className="mt-2">
+                      <a href="https://faucet.solana.com/" target="_blank" rel="noopener noreferrer">
+                        Get Devnet SOL
+                      </a>
+                    </Button>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">3. Connect Wallet</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Click &quot;Connect Wallet&quot; in the navigation bar to start earning rewards
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Warning */}
+        <div className="max-w-4xl mx-auto mt-4">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Running on Devnet</AlertTitle>
+            <AlertDescription>
+              This app is running on Solana Devnet for testing purposes. All SOL rewards are test tokens with no real value.
+            </AlertDescription>
+          </Alert>
         </div>
       </section>
     </div>

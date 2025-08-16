@@ -7,11 +7,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ThemeToggle } from './ThemeToggle';
 import { useEffect, useState } from 'react';
+import { useBalance } from '@/contexts/BalanceContext';
 
 export function Navigation() {
   const { connected } = useWallet();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const { totalBalance } = useBalance();
 
   useEffect(() => {
     setMounted(true);
@@ -63,10 +65,20 @@ export function Navigation() {
           {/* Wallet Connection */}
           <div className="flex items-center space-x-2 sm:space-x-4">
             <ThemeToggle />
-            {connected && (
-              <div className="hidden sm:flex items-center space-x-2 text-sm text-muted-foreground">
+            {connected && totalBalance !== null && (
+              <div className="hidden sm:flex items-center space-x-2 text-sm">
+                <div className="flex items-center space-x-1 text-muted-foreground">
+                  <Wallet className="w-3 h-3" />
+                  <span className="font-medium solana-gradient-text">
+                    {totalBalance.toFixed(4)} SOL
+                  </span>
+                </div>
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Connected</span>
+              </div>
+            )}
+            {connected && totalBalance === 0 && (
+              <div className="hidden sm:flex items-center space-x-2 text-xs text-yellow-600">
+                <span>Need Devnet SOL? Visit Solana Faucet</span>
               </div>
             )}
             {mounted && (
