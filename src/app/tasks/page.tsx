@@ -9,6 +9,10 @@ import { Zap, Clock, Users, CheckCircle, Play, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useBalance } from '@/contexts/BalanceContext';
+import { QuizTask } from '@/components/tasks/QuizTask';
+import { TwitterVerificationTask } from '@/components/tasks/TwitterVerificationTask';
+import { DiscordVerificationTask } from '@/components/tasks/DiscordVerificationTask';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface Task {
   id: string;
@@ -21,68 +25,204 @@ interface Task {
   participants: number;
   completed: boolean;
   proofRequired: boolean;
+  taskType?: 'quiz' | 'verification' | 'profile' | 'survey' | 'daily' | 'social' | 'education' | 'referral' | 'testing' | 'feedback' | 'challenge' | 'content';
 }
 
 const mockTasks: Task[] = [
   {
     id: '1',
-    title: 'Complete Survey: Solana Ecosystem',
-    description: 'Take a 5-minute survey about your experience with Solana and earn SOL rewards.',
+    title: 'Complete Solana Knowledge Quiz',
+    description: 'Answer 5 questions about Solana blockchain. Get 4+ correct to earn rewards.',
     reward: 0.1,
     difficulty: 'Easy',
-    category: 'Survey',
+    category: 'Quiz',
     estimatedTime: '5 min',
     participants: 1247,
     completed: false,
-    proofRequired: true,
+    proofRequired: false,
+    taskType: 'quiz',
   },
   {
     id: '2',
-    title: 'Share on Twitter',
-    description: 'Share our platform on Twitter with #SolanaRewards and tag 3 friends.',
+    title: 'Verify Your Email',
+    description: 'Enter your email address to verify your account and earn bonus rewards.',
     reward: 0.05,
     difficulty: 'Easy',
-    category: 'Social',
+    category: 'Verification',
     estimatedTime: '2 min',
     participants: 892,
     completed: false,
-    proofRequired: true,
+    proofRequired: false,
+    taskType: 'verification',
   },
   {
     id: '3',
-    title: 'Test New Feature',
-    description: 'Test our new wallet integration feature and provide feedback.',
-    reward: 0.25,
-    difficulty: 'Medium',
-    category: 'Testing',
-    estimatedTime: '15 min',
-    participants: 156,
+    title: 'Complete Profile Setup',
+    description: 'Fill out your complete profile with bio, location, and interests.',
+    reward: 0.08,
+    difficulty: 'Easy',
+    category: 'Profile',
+    estimatedTime: '3 min',
+    participants: 567,
     completed: false,
-    proofRequired: true,
+    proofRequired: false,
+    taskType: 'profile',
   },
   {
     id: '4',
-    title: 'Write Blog Post',
-    description: 'Write a 500-word blog post about your experience with Solana DeFi.',
-    reward: 0.5,
-    difficulty: 'Hard',
-    category: 'Content',
-    estimatedTime: '45 min',
-    participants: 23,
+    title: 'Take Platform Feedback Survey',
+    description: 'Complete a short survey about your experience with our platform.',
+    reward: 0.12,
+    difficulty: 'Easy',
+    category: 'Survey',
+    estimatedTime: '8 min',
+    participants: 234,
     completed: false,
-    proofRequired: true,
+    proofRequired: false,
+    taskType: 'survey',
   },
   {
     id: '5',
-    title: 'Join Discord Community',
-    description: 'Join our Discord server and introduce yourself in the #general channel.',
+    title: 'Daily Check-in',
+    description: 'Check in daily to maintain your streak and earn rewards.',
     reward: 0.02,
     difficulty: 'Easy',
-    category: 'Community',
-    estimatedTime: '3 min',
+    category: 'Daily',
+    estimatedTime: '1 min',
     participants: 2341,
     completed: false,
     proofRequired: false,
+    taskType: 'daily',
+  },
+  {
+    id: '6',
+    title: 'Verify Twitter Account',
+    description: 'Connect your Twitter/X account to earn social media rewards.',
+    reward: 0.06,
+    difficulty: 'Easy',
+    category: 'Social',
+    estimatedTime: '3 min',
+    participants: 445,
+    completed: false,
+    proofRequired: false,
+    taskType: 'social',
+  },
+  {
+    id: '7',
+    title: 'Complete Tutorial',
+    description: 'Watch our platform tutorial video and answer 3 questions.',
+    reward: 0.15,
+    difficulty: 'Easy',
+    category: 'Education',
+    estimatedTime: '10 min',
+    participants: 123,
+    completed: false,
+    proofRequired: false,
+    taskType: 'education',
+  },
+  {
+    id: '8',
+    title: 'Refer a Friend',
+    description: 'Share your referral link and get a friend to join the platform.',
+    reward: 0.25,
+    difficulty: 'Medium',
+    category: 'Referral',
+    estimatedTime: '5 min',
+    participants: 89,
+    completed: false,
+    proofRequired: true,
+    taskType: 'referral',
+  },
+  {
+    id: '9',
+    title: 'Submit Bug Report',
+    description: 'Find and report any bugs you encounter while using the platform.',
+    reward: 0.2,
+    difficulty: 'Medium',
+    category: 'Testing',
+    estimatedTime: '15 min',
+    participants: 67,
+    completed: false,
+    proofRequired: true,
+    taskType: 'testing',
+  },
+  {
+    id: '10',
+    title: 'Feature Request',
+    description: 'Submit a detailed feature request with use case explanation.',
+    reward: 0.18,
+    difficulty: 'Medium',
+    category: 'Feedback',
+    estimatedTime: '12 min',
+    participants: 45,
+    completed: false,
+    proofRequired: true,
+    taskType: 'feedback',
+  },
+  {
+    id: '11',
+    title: 'Weekly Challenge',
+    description: 'Complete 5 tasks this week to unlock bonus rewards.',
+    reward: 0.5,
+    difficulty: 'Hard',
+    category: 'Challenge',
+    estimatedTime: '30 min',
+    participants: 23,
+    completed: false,
+    proofRequired: false,
+    taskType: 'challenge',
+  },
+  {
+    id: '12',
+    title: 'Platform Review',
+    description: 'Write a detailed review about your experience with our platform.',
+    reward: 0.3,
+    difficulty: 'Medium',
+    category: 'Content',
+    estimatedTime: '20 min',
+    participants: 34,
+    completed: false,
+    proofRequired: true,
+    taskType: 'content',
+  },
+  {
+    id: '13',
+    title: 'Security Quiz',
+    description: 'Complete a security awareness quiz about crypto wallet safety.',
+    reward: 0.1,
+    difficulty: 'Easy',
+    category: 'Quiz',
+    estimatedTime: '6 min',
+    participants: 156,
+    completed: false,
+    proofRequired: false,
+    taskType: 'quiz',
+  },
+  {
+    id: '14',
+    title: 'Profile Picture Upload',
+    description: 'Upload a profile picture to complete your account setup.',
+    reward: 0.03,
+    difficulty: 'Easy',
+    category: 'Profile',
+    estimatedTime: '2 min',
+    participants: 789,
+    completed: false,
+    proofRequired: false,
+    taskType: 'profile',
+  },
+  {
+    id: '15',
+    title: 'Verify Discord Account',
+    description: 'Connect your Discord account to join our community.',
+    reward: 0.04,
+    difficulty: 'Easy',
+    category: 'Social',
+    estimatedTime: '3 min',
+    participants: 234,
+    completed: false,
+    proofRequired: false,
+    taskType: 'social',
   },
 ];
 
@@ -91,18 +231,32 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isCompleting, setIsCompleting] = useState<string | null>(null);
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [showTaskModal, setShowTaskModal] = useState(false);
   const { totalBalance, addEarnedBalance, isProcessing, refreshBalance } = useBalance();
 
-  const categories = ['All', 'Survey', 'Social', 'Testing', 'Content', 'Community'];
+  const categories = ['All', 'Quiz', 'Verification', 'Profile', 'Survey', 'Daily', 'Social', 'Education', 'Referral', 'Testing', 'Feedback', 'Challenge', 'Content'];
 
-  const handleTaskComplete = async (taskId: string) => {
+  const handleTaskStart = (task: Task) => {
+    setActiveTask(task);
+    setShowTaskModal(true);
+  };
+
+  const handleTaskComplete = async (taskId: string, taskSuccess: boolean = true) => {
     if (isCompleting || isProcessing) return; // Prevent multiple clicks
     
     setIsCompleting(taskId);
+    setShowTaskModal(false);
+    setActiveTask(null);
     
     try {
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
+
+      if (!taskSuccess) {
+        toast.error('Task not completed. Please try again.');
+        return;
+      }
 
       // Show processing state
       toast.loading(`Processing task completion and sending ${task.reward} SOL from platform wallet...`);
@@ -134,6 +288,71 @@ export default function TasksPage() {
       toast.error('Task completion failed. Please try again.');
     } finally {
       setIsCompleting(null);
+    }
+  };
+
+  const handleTaskClose = () => {
+    setShowTaskModal(false);
+    setActiveTask(null);
+  };
+
+  const renderTaskModal = () => {
+    if (!activeTask) return null;
+
+    switch (activeTask.taskType) {
+      case 'quiz':
+        return (
+          <QuizTask 
+            onComplete={(success) => handleTaskComplete(activeTask.id, success)}
+            onClose={handleTaskClose}
+          />
+        );
+      case 'social':
+        // Check if it's Twitter or Discord based on task title
+        if (activeTask.title.toLowerCase().includes('twitter')) {
+          return (
+            <TwitterVerificationTask 
+              onComplete={(success) => handleTaskComplete(activeTask.id, success)}
+              onClose={handleTaskClose}
+            />
+          );
+        } else if (activeTask.title.toLowerCase().includes('discord')) {
+          return (
+            <DiscordVerificationTask 
+              onComplete={(success) => handleTaskComplete(activeTask.id, success)}
+              onClose={handleTaskClose}
+            />
+          );
+        }
+        // Fallback for other social tasks
+        break;
+      default:
+        return (
+          <Card className="w-full max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle>{activeTask.title}</CardTitle>
+              <CardDescription>{activeTask.description}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">
+                  This task requires manual completion. Please complete the task and then click the button below.
+                </p>
+                <div className="flex space-x-2">
+                  <Button onClick={handleTaskClose} variant="outline" className="flex-1">
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={() => handleTaskComplete(activeTask.id)}
+                    className="flex-1"
+                  >
+                    Mark as Complete
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
     }
   };
 
@@ -268,7 +487,7 @@ export default function TasksPage() {
                     </Button>
                   ) : (
                     <Button 
-                      onClick={() => handleTaskComplete(task.id)}
+                      onClick={() => handleTaskStart(task)}
                       disabled={isCompleting === task.id || isProcessing}
                       className="w-full solana-gradient text-white hover:opacity-90 disabled:opacity-50"
                     >
@@ -280,7 +499,7 @@ export default function TasksPage() {
                       ) : (
                         <>
                           <Play className="w-4 h-4 mr-2" />
-                          {task.proofRequired ? 'Submit Proof' : 'Complete Task'}
+                          {task.proofRequired ? 'Submit Proof' : 'Start Task'}
                         </>
                       )}
                     </Button>
@@ -289,6 +508,16 @@ export default function TasksPage() {
               </Card>
             ))}
           </div>
+
+          {/* Task Modal */}
+          <Dialog open={showTaskModal} onOpenChange={setShowTaskModal}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{activeTask?.title}</DialogTitle>
+              </DialogHeader>
+              {renderTaskModal()}
+            </DialogContent>
+          </Dialog>
 
           {/* Stats */}
           <div className="mt-16">
