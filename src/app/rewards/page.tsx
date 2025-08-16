@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { Gift, Wallet, Zap, Clock, CheckCircle, ExternalLink, Star } from 'lucide-react';
+import { Gift, Wallet, Zap, CheckCircle, Star } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -277,7 +277,7 @@ export default function RewardsPage() {
               <CardContent className="pt-12 pb-12 text-center">
                 <h2 className="text-2xl font-bold mb-4">More Rewards Coming Soon</h2>
                 <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-                  We're constantly adding new subscription services and gift cards. 
+                  We&apos;re constantly adding new subscription services and gift cards. 
                   Stay tuned for more exciting rewards!
                 </p>
                 <div className="flex flex-wrap gap-4 justify-center">

@@ -2,7 +2,6 @@
 
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { Button } from '@/components/ui/button';
 import { Wallet, Home, ListChecks, Gift, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';

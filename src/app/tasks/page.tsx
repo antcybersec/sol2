@@ -4,9 +4,8 @@ import { Navigation } from '@/components/layout/Navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { Zap, Clock, Users, CheckCircle, Play, Star, TrendingUp, Wallet } from 'lucide-react';
+import { Zap, Clock, Users, CheckCircle, Play, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
